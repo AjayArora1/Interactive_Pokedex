@@ -31,6 +31,40 @@ function PokemonName(props) {
     return <p>{name}</p>;
 }
 
+function PokemonBio(props) {
+    const [bio, setBio] = useState('');
+
+    useEffect(() => {
+        const fetchBio = async () => {
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${props.number}`);
+                const data = await response.json();
+
+                // Finding the English flavor text entry
+                const englishBioEntry = data.flavor_text_entries.find(entry => entry.language.name === 'en');
+
+                // Extracting the bio from the English entry and applying replacements
+                let pokemonBio = englishBioEntry.flavor_text
+                    .replace(/\f/g, '\n')
+                    .replace(/\u00ad\n/g, '')
+                    .replace(/\u00ad/g, '')
+                    .replace(/ -\n/g, ' - ')
+                    .replace(/-\n/g, '-')
+                    .replace(/\n/g, ' ');
+
+                setBio(pokemonBio);
+            } catch (error) {
+                console.error('Error fetching Pokemon Bio:', error);
+            }
+        };
+
+        fetchBio();
+    }, [props.number]);
+
+    return <p className="PokemonBio">{bio}</p>;
+}
+
+
 
 function App() {
     const [currentNumber, setCurrentNumber] = useState(1); // Initial Pokemon number
@@ -39,7 +73,7 @@ function App() {
     const handleLeftArrowClick = () => {
         setCurrentNumber((prevNumber) => {
             if (prevNumber === 1) {
-                return 151; // Cycle back to 151 if reached the beginning
+                return 1025; // Cycle back to 1025 if reached the beginning
             } else {
                 return prevNumber - 1;
             }
@@ -49,7 +83,7 @@ function App() {
     // Function to handle right arrow click
     const handleRightArrowClick = () => {
         setCurrentNumber((prevNumber) => {
-            if (prevNumber === 151) {
+            if (prevNumber === 1025) {
                 return 1; // Cycle back to 001 if reached the end
             } else {
                 return prevNumber + 1;
@@ -73,6 +107,7 @@ function App() {
                     <p>#{currentNumber}</p>
                     <PokemonName number={currentNumber} />
                 </h1>
+                <PokemonBio number={currentNumber}/>
             </div>
         </div>
     );

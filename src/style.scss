@@ -1,4 +1,4 @@
-.Appearance {
+Appearance {
 
 }
 
@@ -10,4 +10,11 @@
     p {
         margin: 0 8px 0 0;
     }
+}
+
+.PokemonBio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align:center;
 }
