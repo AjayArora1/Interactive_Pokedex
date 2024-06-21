@@ -1,22 +1,39 @@
-Appearance {
+html {
+    font-family: "Flexo-Regular", arial, sans-serif;
+}
 
+img {
+    width: 286px;
+    height: 286px;
 }
 
 .pokemonTitleContainer {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 8px;
 
     p {
         margin: 0 8px 0 0;
     }
 }
 
+.lookup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 2px;
+    width: 155px;
+    border-radius: 8px;
+}
+
 .PokemonBio {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align:center;
+    text-align: center;
+    margin-bottom: 0;
 }
 
 .pokemonTypeContainer {
@@ -30,19 +47,17 @@ Appearance {
 }
 
 .leftArrow {
-    font-size: 200px;
-    transform: scale(.25, 1);
-    height: 215px;
-    border: 1px solid transparent;
-    background-color: transparent;
+    border: 1px solid black;
+    border-radius: 8px;
+    background-color: white;
+    margin-top: 275px;
 }
 
 .rightArrow {
-    font-size: 200px;
-    transform: scale(.25, 1);
-    height: 215px;
-    border: 1px solid transparent;
-    background-color: transparent;
+    border: 1px solid black;
+    border-radius: 8px;
+    background-color: white;
+    margin-top: 275px;
 }
 
 .leftArrow:hover {
@@ -102,7 +117,7 @@ Appearance {
 
 .PokemonType.ground {
     background-color: #f7de3f;
-    background: linear-gradient(180deg, #f7de3f 50%, #ab9842 50%); 
+    background: linear-gradient(180deg, #f7de3f 50%, #ab9842 50%);
     border: none;
 }
 
@@ -150,4 +165,103 @@ Appearance {
 .PokemonType.fairy {
     background-color: #fdb9e9;
     border: none;
+}
+
+.crySound {
+    background-color: white;
+    border-radius: 8px;
+}
+
+.crySound:hover {
+    cursor: pointer;
+}
+
+.toggleSprite {
+    background-color: white;
+    border-radius: 8px;
+    margin-left: 4px;
+}
+
+.toggleSprite:hover {
+    cursor: pointer;
+}
+
+.toggleShinySprite {
+    background-color: white;
+    border-radius: 8px;
+    margin-left: 4px;
+}
+
+.toggleShinySprite:hover {
+    cursor: pointer;
+}
+
+@keyframes slideOutRight {
+    0% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(100vw);
+    }
+}
+
+@keyframes slideInLeft {
+    0% {
+        transform: translateX(-100vw);
+    }
+
+    50% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutLeft {
+    0% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(-100vw);
+    }
+}
+
+@keyframes slideInRight {
+    0% {
+        transform: translateX(100vw);
+    }
+
+    50% {
+        transform: translateX(0);
+    }
+}
+
+.pokemonImage {
+    top: 0; /* Adjust as needed */
+    left: 0; /* Adjust as needed */
+    transition: transform 0.5s ease;
+}
+
+.slideOutRight {
+    animation: slideOutRight 0.25s forwards;
+    opacity: 0%;
+    transition: opacity 0.1s ease-out;
+}
+
+.slideInLeft {
+    animation: slideInLeft 0.25s forwards;
+    opacity: 100%;
+    transition: opacity 0.1s ease-in;
+}
+
+.slideOutLeft {
+    animation: slideOutLeft 0.25s forwards;
+    opacity: 0%;
+    transition: opacity 0.1s ease-out;
+}
+
+.slideInRight {
+    animation: slideInRight 0.25s forwards;
+    opacity: 100%;
+    transition: opacity 0.1s ease-in;
 }

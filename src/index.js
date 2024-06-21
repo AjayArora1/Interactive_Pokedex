@@ -23,11 +23,61 @@ const typeColors = {
     fairy: "rgba(253, 185, 233, 0.2)"
 };
 
+const delayAndUpdateCurrentNumber = async (delay) => {
+    await new Promise(resolve => setTimeout(resolve, delay));
+};
 
 // Pokemon Image.
 function Appearance(props) {
-    const imageUrl = `https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/${props.number}.png`;
-    return <img src={imageUrl} alt={`Pokemon ${props.number}`} />;
+    const [transitionClass, setTransitionClass] = useState(''); // State to manage transition classes
+
+    useEffect(() => {
+        // Determine the direction of transition
+        let exitClass = '';
+        let entranceClass = '';
+
+        if (props.direction === 'left') {
+            exitClass = 'slideOutLeft';
+            entranceClass = 'slideInRight';
+        } else if (props.direction === 'right') {
+            exitClass = 'slideOutRight';
+            entranceClass = 'slideInLeft';
+        }
+
+        // Apply exit transition class
+        setTransitionClass(exitClass);
+
+        // Reset transition after a short delay (adjust as needed)
+        const timeout = setTimeout(() => {
+            setTransitionClass('');
+        }, 250); // Adjust timing as per your transition needs
+
+        // Set entrance transition class after exit completes
+        const entranceTimeout = setTimeout(() => {
+            setTransitionClass(entranceClass);
+        }, 250); // Ensure entrance starts shortly after exit begins
+
+        return () => {
+            clearTimeout(timeout);
+            clearTimeout(entranceTimeout);
+        };
+    }, [props.direction, props.number]);
+
+    const imageUrl = props.isShiny
+        ? (props.isFront
+            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${props.number}.png`
+            : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/shiny/${props.number}.png`)
+        : (props.isFront
+            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.number}.png`
+            : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${props.number}.png`);
+
+    return (
+        <img
+            src={imageUrl}
+            alt={`Pokemon ${props.number}`}
+            className={`pokemonImage ${transitionClass}`}
+        />
+    );
 }
 
 function capitalizeName(string) {
@@ -148,51 +198,158 @@ function PokemonType(props) {
 }
 
 function App() {
-    const [currentNumber, setCurrentNumber] = useState(1); // Initial Pokemon number
+    const [currentNumber, setCurrentNumber] = React.useState(1); // Initial Pokemon number
+    const [inputValue, setInputValue] = React.useState('');
+    const [audioSrc, setAudioSrc] = useState('');
+    const [isFront, setIsFront] = useState(true); // State to toggle between front and back sprites
+    const [isShiny, setIsShiny] = useState(false); // State to toggle between shiny and non-shiny sprites
+    const [direction, setDirection] = useState('');
 
-    // Function to handle left arrow click
+    useEffect(() => {
+        const fetchPokemonSound = async () => {
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${currentNumber}`);
+                await response.json();
+                const soundUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${currentNumber}.ogg`;
+                setAudioSrc(soundUrl);
+            } catch (error) {
+                console.error('Error fetching Pokemon sound:', error);
+            }
+        };
+
+        fetchPokemonSound();
+    }, [currentNumber]);
+
+    const playPokemonSound = () => {
+        if (audioSrc) {
+            const audio = new Audio(audioSrc);
+            audio.play();
+        }
+    };
+
+    const toggleSprite = () => {
+        setIsFront(!isFront);
+    };
+
+    const toggleShinySprite = () => {
+        setIsShiny(!isShiny);
+    };
+
     const handleLeftArrowClick = () => {
-        setCurrentNumber((prevNumber) => {
-            if (prevNumber === 1) {
-                return 1025; // Cycle back to 1025 if reached the beginning
-            } else {
-                return prevNumber - 1;
-            }
+        setDirection('right'); // Slide out to the right
+
+        delayAndUpdateCurrentNumber(150).then(() => {
+            setCurrentNumber((prevNumber) => {
+                if (prevNumber === 1) {
+                    return 1025; // Cycle back to 1025 if reached the beginning
+                } else {
+                    return prevNumber - 1;
+                }
+            });
         });
     };
 
-    // Function to handle right arrow click
     const handleRightArrowClick = () => {
-        setCurrentNumber((prevNumber) => {
-            if (prevNumber === 1025) {
-                return 1; // Cycle back to 001 if reached the end
-            } else {
-                return prevNumber + 1;
-            }
+        setDirection('left'); // Slide out to the left
+
+        delayAndUpdateCurrentNumber(150).then(() => {
+            setCurrentNumber((prevNumber) => {
+                if (prevNumber === 1025) {
+                    return 1; // Cycle back to 001 if reached the end
+                } else {
+                    return prevNumber + 1;
+                }
+            });
         });
     };
+
+    // Function to handle input change
+    const handleInputChange = (event) => {
+        setInputValue(event.target.value);
+    };
+
+    // Function to handle input submission
+    const handleInputSubmit = (event) => {
+        if (event.key === 'Enter') {
+            const value = parseInt(inputValue);
+            if (!isNaN(value) && value >= 1 && value <= 1025) {
+                setCurrentNumber(value);
+                setInputValue('');
+            }
+        }
+    };
+
+    React.useEffect(() => {
+        const handleKeyPress = (event) => {
+            if (event.key === "ArrowLeft") {
+                handleLeftArrowClick();
+            } else if (event.key === "ArrowRight") {
+                handleRightArrowClick();
+            }
+        };
+
+        // Add event listener for keydown event
+        document.addEventListener('keydown', handleKeyPress);
+
+        // Clean up the event listener when component unmounts
+        return () => {
+            document.removeEventListener('keydown', handleKeyPress);
+        };
+    }, []); // Empty dependency array to ensure effect runs only once
 
     return (
-        <div>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+        }}>
+            <audio src={audioSrc} id="pokemonCry"></audio>
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
             }}>
-                <button className="leftArrow" onClick={handleLeftArrowClick}>&lt;</button>
-                <Appearance number={currentNumber.toString().padStart(3, '0')} />
-                <button className="rightArrow" onClick={handleRightArrowClick}>&gt;</button>
+                <button className="leftArrow" onClick={handleLeftArrowClick}>&#8592;</button>
+                <Appearance
+                    number={currentNumber.toString()}
+                    isFront={isFront}
+                    isShiny={isShiny}
+                    direction={direction}
+                />
+                <button className="rightArrow" onClick={handleRightArrowClick}>&#8594;</button>
             </div>
-            <div>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
                 <h1 className="pokemonTitleContainer">
                     <p>#{currentNumber}</p>
                     <PokemonName number={currentNumber} />
+                    <button className='crySound' onClick={playPokemonSound}>&#128266;</button>
+                    <button className='toggleSprite' onClick={toggleSprite}>&#8634;</button>
+                    <button className='toggleShinySprite' onClick={toggleShinySprite}>&#10024;</button>
                 </h1>
-                <PokemonBio number={currentNumber} />
-                <h2 className="pokemonTypeContainer">
-                    <PokemonType number={currentNumber} />
-                </h2>
             </div>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
+                <input
+                    type="number"
+                    className="lookup"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleInputSubmit}
+                    placeholder="Lookup # (Press Enter)"
+                />
+            </div>
+            <PokemonBio number={currentNumber} />
+            <h2 className="pokemonTypeContainer">
+                <PokemonType number={currentNumber} />
+            </h2>
         </div>
     );
 }
