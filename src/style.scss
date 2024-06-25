@@ -47,17 +47,19 @@ img {
 }
 
 .leftArrow {
-    border: 1px solid black;
-    border-radius: 8px;
     background-color: white;
-    margin-top: 275px;
+    border-radius: 8px;
+    height: 23.6px;
+    width: 33.5px;
+    margin-right: 5px;
 }
 
 .rightArrow {
-    border: 1px solid black;
-    border-radius: 8px;
     background-color: white;
-    margin-top: 275px;
+    border-radius: 8px;
+    height: 23.6px;
+    width: 33.5px;
+    margin-left: 5px;
 }
 
 .leftArrow:hover {
@@ -170,6 +172,8 @@ img {
 .crySound {
     background-color: white;
     border-radius: 8px;
+    height: 23.6px;
+    width: 33.5px;
 }
 
 .crySound:hover {
@@ -180,6 +184,8 @@ img {
     background-color: white;
     border-radius: 8px;
     margin-left: 4px;
+    height: 23.6px;
+    width: 33.5px;
 }
 
 .toggleSprite:hover {
@@ -190,6 +196,8 @@ img {
     background-color: white;
     border-radius: 8px;
     margin-left: 4px;
+    height: 23.6px;
+    width: 33.5px;
 }
 
 .toggleShinySprite:hover {

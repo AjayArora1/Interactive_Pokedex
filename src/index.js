@@ -87,8 +87,10 @@ function capitalizeName(string) {
 function PokemonName(props) {
     const [name, setName] = useState('');
 
+    // Effect to fetch and update Pokemon name
     useEffect(() => {
         const fetchData = async () => {
+
             try {
                 const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${props.number}`);
                 const data = await response.json();
@@ -105,23 +107,41 @@ function PokemonName(props) {
                     .replace(/-\n/g, '-')
                     .replace(/\n/g, ' ');
 
+                // Simulate typewriter effect for name
+                await typewriterEffect(formattedName);
+
                 setName(formattedName);
             } catch (error) {
                 console.error('Error fetching Pokemon Name:', error);
             }
+
         };
 
         fetchData();
     }, [props.number]);
 
-    return <p>{name}</p>;
+    // Function to simulate typewriter effect
+    const typewriterEffect = async (text) => {
+        for (let i = 0; i <= text.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 50)); // Adjust speed of deletion
+            setName(text.slice(0, i) + ' '.repeat(text.length - i));
+        }
+    };
+
+    return (
+        <p>{name}</p>
+    );
 }
 
 function PokemonBio(props) {
     const [bio, setBio] = useState('');
+    const [isLoading, setLoading] = useState(true);
 
+    // Effect to fetch and update Pokemon bio
     useEffect(() => {
         const fetchBio = async () => {
+            setLoading(true); // Set loading state
+
             try {
                 const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${props.number}`);
                 const data = await response.json();
@@ -138,16 +158,31 @@ function PokemonBio(props) {
                     .replace(/-\n/g, '-')
                     .replace(/\n/g, ' ');
 
+                // Simulate typewriter effect for bio
+                await typewriterEffect(pokemonBio);
+
                 setBio(pokemonBio);
             } catch (error) {
                 console.error('Error fetching Pokemon Bio:', error);
             }
+
+            setLoading(false); // Reset loading state
         };
 
         fetchBio();
     }, [props.number]);
 
-    return <p className="PokemonBio">{bio}</p>;
+    // Function to simulate typewriter effect
+    const typewriterEffect = async (text) => {
+        for (let i = 0; i <= text.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 25)); // Adjust speed of deletion
+            setBio(text.slice(0, i) + ' '.repeat(text.length - i));
+        }
+    };
+
+    return (
+        <p className="PokemonBio">{bio}</p>
+    );
 }
 
 function PokemonType(props) {
@@ -310,14 +345,12 @@ function App() {
                 alignItems: 'center',
                 justifyContent: 'center',
             }}>
-                <button className="leftArrow" onClick={handleLeftArrowClick}>&#8592;</button>
                 <Appearance
                     number={currentNumber.toString()}
                     isFront={isFront}
                     isShiny={isShiny}
                     direction={direction}
                 />
-                <button className="rightArrow" onClick={handleRightArrowClick}>&#8594;</button>
             </div>
             <div style={{
                 display: 'flex',
@@ -337,6 +370,7 @@ function App() {
                 alignItems: 'center',
                 justifyContent: 'center',
             }}>
+                <button className="leftArrow" onClick={handleLeftArrowClick}>&#8592;</button>
                 <input
                     type="number"
                     className="lookup"
@@ -345,6 +379,7 @@ function App() {
                     onKeyDown={handleInputSubmit}
                     placeholder="Lookup # (Press Enter)"
                 />
+                <button className="rightArrow" onClick={handleRightArrowClick}>&#8594;</button>
             </div>
             <PokemonBio number={currentNumber} />
             <h2 className="pokemonTypeContainer">
