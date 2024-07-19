@@ -11,7 +11,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin: 4px 0 4px 0;
 
     p {
         margin: 0 8px 0 0;
@@ -23,7 +23,7 @@ img {
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin: 2px;
+    margin: 4px;
     width: 155px;
     border-radius: 8px;
 }
@@ -33,7 +33,9 @@ img {
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 0;
+    margin-bottom: 4px;
+    margin-top: 4px;
+    width: 410px;
 }
 
 .pokemonTypeContainer {
@@ -273,3 +275,53 @@ img {
     opacity: 100%;
     transition: opacity 0.1s ease-in;
 }
+
+.PokemonHeightWeight p {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.PokemonHeightWeight {
+    text-align: center; /* Center align overall content */
+}
+
+.HeightWeight {
+    text-align: center; /* Center align content */
+}
+
+.HeightWeightGrid {
+    padding-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 3 columns with equal width */
+    grid-template-rows: auto auto; /* Automatically adjust rows based on content */
+    gap: 8px; /* Gap between grid items */
+}
+
+.HeightWeightGridItem {
+    padding: 5px;
+    border: 1px solid #ccc; /* Optional: Add border for clarity */
+    border-radius: 4px;
+}
+
+.BaseStats {
+    text-align: center; /* Center align content */
+}
+
+.StatsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns with equal width */
+    grid-template-rows: auto auto; /* Automatically adjust rows based on content */
+    gap: 8px; /* Gap between grid items */
+}
+
+.StatItem {
+    padding: 5px;
+    border: 1px solid #ccc; /* Optional: Add border for clarity */
+    border-radius: 4px;
+}
+
+.BoldLabel {
+    font-weight: bold;
+}
+
+

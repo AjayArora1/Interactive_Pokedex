@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import './style.scss';
 
@@ -84,6 +84,78 @@ function capitalizeName(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+function PokemonHeightWeight(props) {
+    const [height, setHeight] = useState('');
+    const [weight, setWeight] = useState('');
+    const [stats, setStats] = useState([]);
+    const [fetchingStats, setFetchingStats] = useState(false);
+
+    const statLabels = {
+        hp: 'HP',
+        attack: 'Attack',
+        defense: 'Defense',
+        'special-attack': 'Sp. Attack',
+        'special-defense': 'Sp. Defense',
+        speed: 'Speed'
+    };
+
+    useEffect(() => {
+        const fetchHeightWeight = async () => {
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${props.number}`);
+                const data = await response.json();
+
+                // Calculate height and weight as before
+                const pokemonHeight = data.height * 10;
+                const pokemonWeight = data.weight / 10;
+
+                // Update state with fetched height and weight
+                setHeight(`${pokemonHeight}cm`);
+                setWeight(`${pokemonWeight}kg`);
+
+                // Extract base stats
+                const baseStats = data.stats.map(stat => ({
+                    name: stat.stat.name,
+                    value: stat.base_stat
+                }));
+
+                // Update state with base stats
+                setStats(baseStats);
+            } catch (error) {
+                console.error('Error fetching Pokemon height, weight, and stats:', error);
+            } finally {
+                setFetchingStats(false);
+            }
+        };
+
+        fetchHeightWeight();
+    }, [props.number]);
+
+    return (
+        <div className="PokemonHeightWeight">
+            <div className="HeightWeight">
+                <div className="HeightWeightGrid">
+                    <div className="HeightWeightGridItem">
+                        <p><strong>Height:</strong> {height}</p>
+                    </div>
+                    <div className="HeightWeightGridItem">
+                        <p><strong>Weight:</strong> {weight}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="BaseStats">
+                <div className="StatsGrid">
+                    {stats.map((stat, index) => (
+                        <div key={index} className="StatItem">
+                            <span className="BoldLabel">{statLabels[stat.name]}</span>: {stat.value}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function PokemonName(props) {
     const [name, setName] = useState('');
 
@@ -135,15 +207,33 @@ function PokemonName(props) {
 
 function PokemonBio(props) {
     const [bio, setBio] = useState('');
-    const [isLoading, setLoading] = useState(true);
+    const [fetching, setFetching] = useState(false);
 
-    // Effect to fetch and update Pokemon bio
+    // Ref to manage ongoing fetch request and typewriter effect
+    const fetchControllerRef = useRef(null);
+    const typewriterTimeoutRef = useRef(null);
+
+    useEffect(() => {
+        // Clear ongoing fetch and typewriter effect if component unmounts or fetch is re-triggered
+        return () => {
+            if (fetchControllerRef.current) {
+                fetchControllerRef.current.abort();
+            }
+            clearTimeout(typewriterTimeoutRef.current);
+        };
+    }, []);
+
     useEffect(() => {
         const fetchBio = async () => {
-            setLoading(true); // Set loading state
+            setBio(''); // Clear previous bio
+            setFetching(true); // Set fetching state
+
+            // Create a new AbortController for fetch cancellation
+            const controller = new AbortController();
+            fetchControllerRef.current = controller;
 
             try {
-                const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${props.number}`);
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${props.number}`, { signal: controller.signal });
                 const data = await response.json();
 
                 // Finding the English flavor text entry
@@ -164,19 +254,36 @@ function PokemonBio(props) {
                 setBio(pokemonBio);
             } catch (error) {
                 console.error('Error fetching Pokemon Bio:', error);
+                setBio('Bio not available'); // Handle error case gracefully
+            } finally {
+                setFetching(false); // Reset fetching state
             }
-
-            setLoading(false); // Reset loading state
         };
 
-        fetchBio();
+        // Debounce fetch requests to avoid rapid API calls
+        const debounceFetch = setTimeout(() => {
+            fetchBio();
+        }, 300); // Adjust debounce delay as needed
+
+        // Cleanup function to clear timeout and abort fetch if component unmounts or fetch is re-triggered
+        return () => {
+            clearTimeout(debounceFetch);
+            if (fetchControllerRef.current) {
+                fetchControllerRef.current.abort();
+            }
+            clearTimeout(typewriterTimeoutRef.current);
+        };
     }, [props.number]);
 
     // Function to simulate typewriter effect
     const typewriterEffect = async (text) => {
         for (let i = 0; i <= text.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, 25)); // Adjust speed of deletion
-            setBio(text.slice(0, i) + ' '.repeat(text.length - i));
+            await new Promise(resolve => {
+                typewriterTimeoutRef.current = setTimeout(() => {
+                    setBio(text.slice(0, i));
+                    resolve();
+                }, 25); // Adjust speed of deletion
+            });
         }
     };
 
@@ -231,7 +338,6 @@ function PokemonType(props) {
         </div>
     );
 }
-
 function App() {
     const [currentNumber, setCurrentNumber] = React.useState(1); // Initial Pokemon number
     const [inputValue, setInputValue] = React.useState('');
@@ -364,11 +470,14 @@ function App() {
                     <button className='toggleSprite' onClick={toggleSprite}>&#8634;</button>
                     <button className='toggleShinySprite' onClick={toggleShinySprite}>&#10024;</button>
                 </h1>
+                
             </div>
+            
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                margin: '4px 0 4px 0'
             }}>
                 <button className="leftArrow" onClick={handleLeftArrowClick}>&#8592;</button>
                 <input
@@ -382,6 +491,7 @@ function App() {
                 <button className="rightArrow" onClick={handleRightArrowClick}>&#8594;</button>
             </div>
             <PokemonBio number={currentNumber} />
+            <PokemonHeightWeight number={currentNumber} />
             <h2 className="pokemonTypeContainer">
                 <PokemonType number={currentNumber} />
             </h2>
