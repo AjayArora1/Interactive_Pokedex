@@ -1,6 +1,6 @@
 {
   "name": "pokedex",
-  "version": "0.5.0",
+  "version": "0.7.5",
   "homepage": "https://ajayarora1.github.io/Interactive_Pokedex",
   "private": true,
   "dependencies": {
