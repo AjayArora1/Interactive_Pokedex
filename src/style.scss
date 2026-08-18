@@ -2,9 +2,56 @@ html {
     font-family: "Flexo-Regular", arial, sans-serif;
 }
 
+html,
+body,
+#root {
+    min-height: 100vh;
+    margin: 0;
+}
+
+body {
+    transition: background-color 0.5s ease;
+}
+
+.Pokedex {
+    width: min(480px, 95vw);
+    box-sizing: border-box;
+    margin: 40px auto;
+    padding: 24px;
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background 0.5s ease;
+}
+
 img {
     width: 286px;
     height: 286px;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+}
+
+.pokemonFloat {
+    position: relative;
+    width: 286px;
+    height: 286px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .pokemonTitleContainer {
@@ -35,7 +82,9 @@ img {
     text-align: center;
     margin-bottom: 4px;
     margin-top: 4px;
-    width: 410px;
+    width: 400px;
+    min-height: calc(3 * 1.4em); /* reserve space for 3 lines */
+    line-height: 1.4em;
 }
 
 .pokemonTypeContainer {
@@ -206,74 +255,113 @@ img {
     cursor: pointer;
 }
 
-@keyframes slideOutRight {
-    0% {
-        transform: translateX(0);
-    }
-
-    50% {
-        transform: translateX(100vw);
-    }
-}
-
-@keyframes slideInLeft {
-    0% {
-        transform: translateX(-100vw);
-    }
-
-    50% {
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideOutLeft {
-    0% {
-        transform: translateX(0);
-    }
-
-    50% {
-        transform: translateX(-100vw);
-    }
-}
-
-@keyframes slideInRight {
-    0% {
-        transform: translateX(100vw);
-    }
-
-    50% {
-        transform: translateX(0);
-    }
-}
-
 .pokemonImage {
+    position: absolute;
     top: 0; /* Adjust as needed */
     left: 0; /* Adjust as needed */
-    transition: transform 0.5s ease;
 }
 
-.slideOutRight {
-    animation: slideOutRight 0.25s forwards;
-    opacity: 0%;
-    transition: opacity 0.1s ease-out;
+@keyframes shuffleOut {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 1;
+        z-index: 2;
+    }
+
+    100% {
+        transform: translateY(-45px) rotate(-10deg) scale(0.88);
+        opacity: 0;
+        z-index: 2;
+    }
 }
 
-.slideInLeft {
-    animation: slideInLeft 0.25s forwards;
-    opacity: 100%;
-    transition: opacity 0.1s ease-in;
+@keyframes shuffleIn {
+    0% {
+        transform: translateY(24px) scale(0.85);
+        opacity: 0.5;
+        z-index: 1;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        z-index: 1;
+    }
 }
 
-.slideOutLeft {
-    animation: slideOutLeft 0.25s forwards;
-    opacity: 0%;
-    transition: opacity 0.1s ease-out;
+.shuffleOut {
+    animation: shuffleOut 0.4s ease forwards;
 }
 
-.slideInRight {
-    animation: slideInRight 0.25s forwards;
-    opacity: 100%;
-    transition: opacity 0.1s ease-in;
+.shuffleIn {
+    animation: shuffleIn 0.4s ease forwards;
+}
+
+.cardShuffle {
+    animation: cardShuffle 0.4s ease;
+}
+
+@keyframes cardShuffle {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    30% {
+        transform: scale(1.015) rotate(-0.6deg);
+    }
+
+    60% {
+        transform: scale(0.995) rotate(0.4deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+        z-index: 2;
+    }
+
+    100% {
+        opacity: 0;
+        z-index: 2;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        z-index: 1;
+    }
+
+    100% {
+        opacity: 1;
+        z-index: 1;
+    }
+}
+
+.fadeOut {
+    animation: fadeOut 0.4s ease forwards;
+}
+
+.fadeIn {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.githubWidget {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.githubIcon {
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 15px;
 }
 
 .PokemonHeightWeight p {
