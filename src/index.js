@@ -29,7 +29,6 @@ const delayAndUpdateCurrentNumber = async (delay) => {
 };
 
 // Pokemon Image.
-// Pokemon Image.
 function Appearance(props) {
     const [displayed, setDisplayed] = useState({
         number: props.number,
@@ -237,6 +236,138 @@ function PokemonName(props) {
         <p>{name}</p>
     );
 }
+function Sidebar({ cardColor, setCurrentRoute, setSelectedType, currentRoute, isComparing, onToggleComparison }) {
+    const [typeOpen, setTypeOpen] = useState(false);
+
+    const types = [
+        "normal", "fire", "water", "grass", "electric", "ice",
+        "fighting", "poison", "ground", "flying", "psychic", "bug",
+        "rock", "ghost", "dragon", "dark", "steel", "fairy"
+    ];
+
+    const isTypeExplorerActive = currentRoute === "type";
+
+    return (
+        <aside className="sidebar" style={{ background: `rgba(${cardColor}, 0.75)` }}>
+            <div className="sidebarHeader">
+                <h2>Tools</h2>
+            </div>
+
+            <div className="sidebarItem">
+                <div className="githubButtonWrapper">
+                    <GitHubButton
+                        href="https://github.com/AjayArora1/Interactive_Pokedex"
+                        data-size="large"
+                        data-show-count="true"
+                        aria-label="Star AjayArora1/Interactive_Pokedex on GitHub"
+                    >
+                        Star
+                    </GitHubButton>
+                </div>
+            </div>
+
+            <button className="sidebarButton" onClick={() => setTypeOpen(!typeOpen)}>
+                Type Explorer
+                <span>{typeOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {typeOpen && (
+                <div className="typeGrid">
+                    {types.map(type => (
+                        <button
+                            key={type}
+                            className={`PokemonType ${type}`}
+                            onClick={() => {
+                                setSelectedType(type);
+                                setCurrentRoute("type");
+                                window.history.pushState({}, "", `/${type}`);
+                                document.title = `${capitalizeName(type)} Type | Interactive Pokédex`;
+                            }}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <button
+                className={`sidebarButton ${isTypeExplorerActive ? 'disabled' : ''}`}
+                disabled={isTypeExplorerActive}
+            >
+                Team Builder
+            </button>
+            <button
+                className={`sidebarButton ${isTypeExplorerActive ? 'disabled' : ''}`}
+                disabled={isTypeExplorerActive}
+            >
+                Evolution Tree
+            </button>
+            <button
+                className={`sidebarButton ${isTypeExplorerActive ? 'disabled' : ''}`}
+                disabled={isTypeExplorerActive}
+                onClick={onToggleComparison}
+            >
+                {isComparing ? 'Stop Comparing' : 'Comparison'}
+            </button>
+        </aside>
+    );
+}
+
+function TypeExplorerView({
+    type,
+    cardColor,
+    onSelectPokemon
+}) {
+    const [pokemon, setPokemon] = useState([]);
+
+    useEffect(() => {
+        const fetchType = async () => {
+            const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+            const data = await res.json();
+
+            setPokemon(
+                data.pokemon
+                    .filter(p => p.slot === 1)
+                    .map(p => ({
+                        id: Number(p.pokemon.url.split("/").filter(Boolean).pop()),
+                        name: p.pokemon.name
+                    }))
+            );
+        };
+
+        fetchType();
+    }, [type]);
+
+    return (
+        <div className="TypeExplorerCard">
+            <h2>{capitalizeName(type)} Type</h2>
+
+            <div className="TypeExplorerGrid">
+                {pokemon.map(p => (
+                    <button
+                        key={p.id}
+                        className="TypePokemonButton"
+                        onClick={async () => {
+                            const res = await fetch(
+                                `https://pokeapi.co/api/v2/pokemon/${p.id}`
+                            );
+                            const data = await res.json();
+
+                            onSelectPokemon(p.id, data.name);
+                        }}
+                    >
+                        <div className="typePokemonFloat">
+                            <img
+                                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
+                                alt={p.name}
+                            />
+                        </div>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 function PokemonBio(props) {
     const [bio, setBio] = useState('');
@@ -378,47 +509,55 @@ function PokemonType(props) {
         </div>
     );
 }
-function App() {
-    const [currentNumber, setCurrentNumber] = React.useState(1); // Initial Pokemon number
-    const [inputValue, setInputValue] = React.useState('');
+
+function PokedexCard({ id, initialNumber, isPrimary, onPrimaryColorChange, onPrimaryNumberChange, isEntering, isExiting, onClose }) {
+    const [currentNumber, setCurrentNumber] = useState(initialNumber);
+    const [inputValue, setInputValue] = useState('');
     const [audioSrc, setAudioSrc] = useState('');
-    const [isFront, setIsFront] = useState(true); // State to toggle between front and back sprites
-    const [isShiny, setIsShiny] = useState(false); // State to toggle between shiny and non-shiny sprites
-    const [direction, setDirection] = useState('');
+    const [isFront, setIsFront] = useState(true);
+    const [isShiny, setIsShiny] = useState(false);
     const [isShuffling, setIsShuffling] = useState(false);
-
-    const [cardColor, setCardColor] = useState(
-        'rgba(255, 255, 255, 0.75)'
-    );
+    const [cardColor, setCardColor] = useState('255, 255, 255');
 
     useEffect(() => {
+        if (isEntering || isExiting) return; // don't double up with the slide animation
         setIsShuffling(true);
-        const timeout = setTimeout(() => setIsShuffling(false), 400); // match animation length
+        const timeout = setTimeout(() => setIsShuffling(false), 400);
         return () => clearTimeout(timeout);
-    }, [currentNumber]);
+    }, [currentNumber, isEntering, isExiting]);
 
     useEffect(() => {
-        document.body.style.backgroundColor = `rgba(${cardColor}, 0.25)`;
-
-        return () => {
-            document.body.style.backgroundColor = '';
-        };
-    }, [cardColor]);
+        if (isPrimary && onPrimaryColorChange) {
+            onPrimaryColorChange(cardColor);
+        }
+    }, [cardColor, isPrimary]);
 
     useEffect(() => {
-        const fetchPokemonSound = async () => {
+        if (isPrimary && onPrimaryNumberChange) {
+            onPrimaryNumberChange(currentNumber);
+        }
+    }, [currentNumber, isPrimary]);
+
+    useEffect(() => {
+        const fetchPokemonData = async () => {
             try {
                 const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${currentNumber}`);
-                await response.json();
+                const data = await response.json();
+
                 const soundUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${currentNumber}.ogg`;
                 setAudioSrc(soundUrl);
+
+                if (isPrimary) {
+                    window.history.replaceState({}, '', `/${data.name}`);
+                    document.title = `${capitalizeName(data.name)} #${currentNumber} | Interactive Pokédex`;
+                }
             } catch (error) {
-                console.error('Error fetching Pokemon sound:', error);
+                console.error('Error fetching Pokemon:', error);
             }
         };
 
-        fetchPokemonSound();
-    }, [currentNumber]);
+        fetchPokemonData();
+    }, [currentNumber, isPrimary]);
 
     const playPokemonSound = () => {
         if (audioSrc) {
@@ -427,13 +566,8 @@ function App() {
         }
     };
 
-    const toggleSprite = () => {
-        setIsFront(!isFront);
-    };
-
-    const toggleShinySprite = () => {
-        setIsShiny(!isShiny);
-    };
+    const toggleSprite = () => setIsFront(f => !f);
+    const toggleShinySprite = () => setIsShiny(s => !s);
 
     const handleLeftArrowClick = () => {
         setCurrentNumber((prevNumber) => (prevNumber === 1 ? 1025 : prevNumber - 1));
@@ -443,12 +577,8 @@ function App() {
         setCurrentNumber((prevNumber) => (prevNumber === 1025 ? 1 : prevNumber + 1));
     };
 
-    // Function to handle input change
-    const handleInputChange = (event) => {
-        setInputValue(event.target.value);
-    };
+    const handleInputChange = (event) => setInputValue(event.target.value);
 
-    // Function to handle input submission
     const handleInputSubmit = (event) => {
         if (event.key === 'Enter') {
             const value = parseInt(inputValue);
@@ -459,102 +589,58 @@ function App() {
         }
     };
 
-    React.useEffect(() => {
+    // Only the primary (first) card responds to global arrow-key navigation,
+    // so comparing a second Pokemon doesn't fight with arrow presses.
+    useEffect(() => {
+        if (!isPrimary) return;
+
         const handleKeyPress = (event) => {
-            if (event.key === "ArrowLeft") {
-                handleLeftArrowClick();
-            } else if (event.key === "ArrowRight") {
-                handleRightArrowClick();
-            }
+            if (event.key === "ArrowLeft") handleLeftArrowClick();
+            else if (event.key === "ArrowRight") handleRightArrowClick();
         };
 
-        // Add event listener for keydown event
         document.addEventListener('keydown', handleKeyPress);
+        return () => document.removeEventListener('keydown', handleKeyPress);
+    }, [isPrimary]);
 
-        // Clean up the event listener when component unmounts
-        return () => {
-            document.removeEventListener('keydown', handleKeyPress);
-        };
-    }, []); // Empty dependency array to ensure effect runs only once
+    const animationClass = isExiting ? 'comparisonExit' : (isEntering ? 'comparisonEnter' : '');
+
+    const slideClass = isExiting ? 'comparisonExit' : (isEntering ? 'comparisonEnter' : '');
+    const shuffleClass = (isShuffling && !isEntering && !isExiting) ? 'cardShuffle' : '';
 
     return (
-        <>
-            <div className="githubWidget">
-                <GitHubButton
-                    href="https://github.com/AjayArora1/Interactive_Pokedex"
-                    data-size="large"
-                    data-show-count="true"
-                    aria-label="Star AjayArora1/Interactive_Pokedex on GitHub"
-                >
-                    Star
-                </GitHubButton>
-            </div>
+        <div
+            className={`Pokedex ${shuffleClass} ${slideClass}`}
+            style={{ background: `rgba(${cardColor}, 0.75)` }}
+        >
+            {!isPrimary && (
+                <button className="closeComparison" onClick={onClose}>✕</button>
+            )}
 
-            <div
-                className={`Pokedex ${isShuffling ? 'cardShuffle' : ''}`}
-                style={{
-                    background: `rgba(${cardColor}, 0.75)`
-                }}
-            >
-                <audio src={audioSrc} id="pokemonCry"></audio>
+            <div className="PokedexContent">
+                <audio src={audioSrc} id={`pokemonCry-${id}`}></audio>
 
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Appearance
                         number={currentNumber.toString()}
                         isFront={isFront}
                         isShiny={isShiny}
-                        direction={direction}
                     />
                 </div>
 
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <h1 className="pokemonTitleContainer">
                         <p>#{currentNumber}</p>
                         <PokemonName number={currentNumber} />
 
-                        <button
-                            className="crySound"
-                            onClick={playPokemonSound}
-                        >
-                            &#128266;
-                        </button>
-
-                        <button
-                            className="toggleSprite"
-                            onClick={toggleSprite}
-                        >
-                            &#8634;
-                        </button>
-
-                        <button
-                            className="toggleShinySprite"
-                            onClick={toggleShinySprite}
-                        >
-                            &#10024;
-                        </button>
+                        <button className="crySound" onClick={playPokemonSound}>&#128266;</button>
+                        <button className="toggleSprite" onClick={toggleSprite}>&#8634;</button>
+                        <button className="toggleShinySprite" onClick={toggleShinySprite}>&#10024;</button>
                     </h1>
                 </div>
 
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '4px 0 4px 0'
-                }}>
-                    <button
-                        className="leftArrow"
-                        onClick={handleLeftArrowClick}
-                    >
-                        &#8592;
-                    </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '4px 0 4px 0' }}>
+                    <button className="leftArrow" onClick={handleLeftArrowClick}>&#8592;</button>
 
                     <input
                         type="number"
@@ -565,26 +651,141 @@ function App() {
                         placeholder="Lookup # (Press Enter)"
                     />
 
-                    <button
-                        className="rightArrow"
-                        onClick={handleRightArrowClick}
-                    >
-                        &#8594;
-                    </button>
+                    <button className="rightArrow" onClick={handleRightArrowClick}>&#8594;</button>
                 </div>
 
                 <PokemonBio number={currentNumber} />
-
                 <PokemonHeightWeight number={currentNumber} />
 
                 <h2 className="pokemonTypeContainer">
-                    <PokemonType
-                        number={currentNumber}
-                        setCardColor={setCardColor}
-                    />
+                    <PokemonType number={currentNumber} setCardColor={setCardColor} />
                 </h2>
             </div>
-        </>
+        </div>
+    );
+}
+
+function App() {
+    const [inputValue, setInputValue] = React.useState(''); // can be removed too, unused now
+    const [direction, setDirection] = useState(''); // unused, can remove
+    const pokemonTypes = [
+        "normal", "fire", "water", "grass", "electric", "ice",
+        "fighting", "poison", "ground", "flying", "psychic", "bug",
+        "rock", "ghost", "dragon", "dark", "steel", "fairy"
+    ];
+
+    const [currentRoute, setCurrentRoute] = useState("pokemon");
+    const [selectedType, setSelectedType] = useState(null);
+
+    const [initialNumber, setInitialNumber] = useState(1);
+    const [primaryNumber, setPrimaryNumber] = useState(1);
+
+    const [isComparing, setIsComparing] = useState(false);
+    const [isComparisonClosing, setIsComparisonClosing] = useState(false);
+    const [comparisonKey, setComparisonKey] = useState(0);
+
+    const [pokemonSlug, setPokemonSlug] = useState('');
+
+    useEffect(() => {
+        const slug = window.location.pathname.replace("/", "").toLowerCase();
+        if (!slug) return;
+
+        if (pokemonTypes.includes(slug)) {
+            setCurrentRoute("type");
+            setSelectedType(slug);
+            document.title = `${capitalizeName(slug)} Type | Interactive Pokédex`;
+            return;
+        }
+
+        const loadPokemon = async () => {
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${slug}`);
+                const data = await response.json();
+                setInitialNumber(data.id);
+                setCurrentRoute("pokemon");
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        loadPokemon();
+    }, []);
+
+    const [cardColor, setCardColor] = useState('255, 255, 255');
+
+    useEffect(() => {
+        document.body.style.backgroundColor = `rgba(${cardColor}, 0.25)`;
+        return () => { document.body.style.backgroundColor = ''; };
+    }, [cardColor]);
+
+    // Reset comparison when leaving the Pokemon route
+    useEffect(() => {
+        if (currentRoute !== "pokemon") {
+            setIsComparing(false);
+            setIsComparisonClosing(false);
+        }
+    }, [currentRoute]);
+
+    const handleToggleComparison = () => {
+        if (isComparing) {
+            setIsComparisonClosing(true);
+            setTimeout(() => {
+                setIsComparing(false);
+                setIsComparisonClosing(false);
+            }, 400); // match slideOutComparison duration
+        } else {
+            setComparisonKey(k => k + 1);
+            setIsComparing(true);
+        }
+    };
+
+    const comparisonStartNumber = (primaryNumber % 1025) + 1;
+
+    return (
+        <div className={`appLayout ${currentRoute === "pokemon" ? "pokemonRoute" : "typeRoute"}`}>
+            {currentRoute === "pokemon" ? (
+                <div className={`pokedexRow ${isComparing ? 'comparing' : 'single'}`}>
+                    <PokedexCard
+                        id="primary"
+                        initialNumber={initialNumber}
+                        isPrimary={true}
+                        onPrimaryColorChange={setCardColor}
+                        onPrimaryNumberChange={setPrimaryNumber}
+                    />
+
+                    {isComparing && (
+                        <PokedexCard
+                            key={comparisonKey}
+                            id="comparison"
+                            initialNumber={comparisonStartNumber}
+                            isPrimary={false}
+                            isEntering={!isComparisonClosing}
+                            isExiting={isComparisonClosing}
+                            onClose={handleToggleComparison}
+                        />
+                    )}
+                </div>
+            ) : (
+                <TypeExplorerView
+                    type={selectedType}
+                    cardColor={cardColor}
+                    onSelectPokemon={(id, name) => {
+                        setInitialNumber(id);
+                        setCurrentRoute("pokemon");
+                        window.history.pushState({}, "", `/${name}`);
+                    }}
+                />
+            )}
+
+            <Sidebar
+                cardColor={cardColor}
+                setCurrentRoute={setCurrentRoute}
+                setSelectedType={setSelectedType}
+                currentRoute={currentRoute}
+                isComparing={isComparing}
+                onToggleComparison={handleToggleComparison}
+            />
+        </div>
     );
 }
 
